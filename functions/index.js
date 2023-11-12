@@ -79,12 +79,29 @@ async function trimAudioFile(inputPath, startTime, duration, outputPath) {
     });
 }
 
-// Generate output file name based on original URL and time inputs
+/**
+ * Generates a new filename based on the original audio file URL and the provided start and end times.
+ * 
+ * @param {string} audioUrl - The URL of the original audio file.
+ * @param {number} startTime - The start time in milliseconds.
+ * @param {number} endTime - The end time in milliseconds.
+ * @return {string} The generated filename for the trimmed audio file.
+ */
 function generateOutputFileName(audioUrl, startTime, endTime) {
-    const urlParts = audioUrl.split('/');
-    const originalFileName = urlParts[urlParts.length - 1].split('.')[0];
-    return `${originalFileName}-trimmed-${startTime}-${endTime}.mp3`;
+    // Extracts just the filename from the URL, discarding the path.
+    const originalFileName = path.basename(audioUrl);
+
+    // Extracts the file extension from the filename.
+    const fileExtension = path.extname(originalFileName);
+
+    // Removes the file extension from the filename to get the base name.
+    const baseName = originalFileName.replace(fileExtension, '');
+
+    // Constructs the new filename using the base name and appending the start and end times,
+    // followed by the original file extension.
+    return `${baseName}-trimmed-${startTime}-${endTime}${fileExtension}`;
 }
+
 
 // Upload trimmed audio to Firebase Storage and return public URL
 async function uploadToFirebaseStorage(filePath, fileName) {
