@@ -66,18 +66,35 @@ async function downloadFile(fileUrl, outputPath) {
 
 // Trim audio file using FFmpeg
 async function trimAudioFile(inputPath, startTime, duration, outputPath) {
+    console.info('Starting audio file trimming process');
+
     return new Promise((resolve, reject) => {
+        console.info('Setting up FFmpeg with input:', inputPath);
+
         ffmpeg(inputPath)
             .setFfmpegPath(ffmpegStatic)
             .audioCodec('libmp3lame')
             .setStartTime(startTime)
             .setDuration(duration / 1000)
             .output(outputPath)
-            .on('end', resolve)
-            .on('error', reject)
+            .on('start', (commandLine) => {
+                console.info('Spawned FFmpeg with command:', commandLine);
+            })
+            .on('end', () => {
+                console.info('Audio file trimming completed:', outputPath);
+                resolve();
+            })
+            .on('error', (err) => {
+                console.error('Error during FFmpeg processing:', err);
+                reject(err);
+            })
+            .on('progress', (progress) => {
+                console.info('Processing progress:', progress);
+            })
             .run();
     });
 }
+
 
 /**
  * Generates a new filename based on the original audio file URL and the provided start and end times.
@@ -113,3 +130,5 @@ async function uploadToFirebaseStorage(filePath, fileName) {
     await file.makePublic();
     return file.publicUrl();
 }
+
+// firebase deploy --only functions
